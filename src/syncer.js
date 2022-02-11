@@ -1,5 +1,4 @@
 const EventEmitter = require('events');
-const config = require('../config');
 
 let isBusy = false;
 let queue = [];
@@ -22,7 +21,7 @@ class Syncer extends EventEmitter {
       } else {
         $.echo(β.green(`Repo “${this.gitUrl}” cloned`));
       }
-    } else if (config.dataAutoPull) {
+    } else {
       $.pushd(this.subDir);
       if (!await $.git.pull('--rebase', { stdoutProc: x => `Repo “${this.gitUrl}”: ${x}` })){
         $.fail(`failed to pull “${this.gitUrl}”`);
@@ -32,7 +31,7 @@ class Syncer extends EventEmitter {
     $.popd();
 
     setTimeout(() => this.emit('update'), 1e2);
-    if (config.dataAutoPull) setInterval(this.refresh, 5 * 60e3);
+    setInterval(this.refresh, 5 * 60e3);
   }
 
   async refresh(){
@@ -46,7 +45,7 @@ class Syncer extends EventEmitter {
     let changed = true;
     if (!await $.git.pull('--rebase', { stdoutProc: x => {
       if (/Already up to date|Current branch master is up to date/.test(x)){
-        if (/Already up to date/.test(x)) changed = false;
+        changed = false;
         return null;
       } else {
         return `Repo “${this.gitUrl}”: ${x}`

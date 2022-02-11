@@ -10,8 +10,6 @@ if (fs.existsSync(configPath)){
     versionOffset: +(process.env['ACEXTDATA_VERSION_OFFSET'] || 0),
     autoReload: false,
     dataAutoReload: true,
-    dataAutoPull: 0,
-    printSource: false,
     dataDir: process.env['ACEXTDATA_STORAGE'],
     tempDir: process.env['ACEXTDATA_STORAGE'] + '/temp',
     serverPort: +(process.env['ACEXTDATA_SERVER_PORT'] || 0),
