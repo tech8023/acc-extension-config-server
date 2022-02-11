@@ -1,30 +1,9 @@
-const FTP = require('basic-ftp');
+const FTP = require("basic-ftp")
 const config = require('../config');
 
 const Readable = require('stream').Readable;
 
-let _ftp = null;
-async function connect() {
-  if (!config.ftpHost) {
-    if (!_ftp){
-      _ftp = {};
-      $.echo(β.yellow('FTP credentials are missing'));
-    }
-    return null;
-  }
-
-  if (_ftp && !_ftp.closed) return _ftp;
-  _ftp = new FTP.Client();
-  await _ftp.access({
-    host: config.ftpHost,
-    user: config.ftpUser,
-    password: config.ftpPassword,
-    autoReconnect: true,
-    secure: false
-  });
-  return ftp;
-}
-
+let ftp = null;
 let busy = false;
 let queue = [];
 setInterval(() => {
@@ -35,15 +14,29 @@ setInterval(() => {
 }, 1000);
 
 class RemoteStorage {
+  static async connect() {
+    if (!config.ftpHost) {
+      $.echo(β.yellow('FTP credentials are missing'));
+      return;
+    }
+    ftp = new FTP.Client();
+    await ftp.access({
+      host: config.ftpHost,
+      user: config.ftpUser,
+      password: config.ftpPassword,
+      autoReconnect: true,
+      secure: false
+    });
+    $.echo(β.green('Connected to FTP server'))
+  }
+
   constructor(dir, defaultExt = '') {
     this.dir = dir;
     this.defaultExt = defaultExt;
   }
 
   async store(data, id) {
-    const ftp = await connect();
     if (!ftp) return;
-
     let remoteFilename = `/patch/_${this.dir}/${id}`;
     if (typeof data === 'string') {
       await ftp.upload(fs.createReadStream(data), remoteFilename);
@@ -58,7 +51,6 @@ class RemoteStorage {
   }
 
   async sync(manifest, warnings, files) {
-    const ftp = await connect();
     if (!ftp) return;
 
     if (busy) {
